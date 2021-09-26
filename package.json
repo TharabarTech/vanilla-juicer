@@ -1,0 +1,26 @@
+{
+  "name": "vanilla-juicer",
+  "version": "1.0.0",
+  "description": "light weight single page application framework",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "vj": "index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TharabarTech/vanilla-juicer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TharabarTech/vanilla-juicer/issues"
+  },
+  "homepage": "https://github.com/TharabarTech/vanilla-juicer#readme",
+  "dependencies": {
+    "commander": "^8.2.0"
+  }
+}
