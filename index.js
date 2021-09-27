@@ -12,6 +12,23 @@ const { Console } = require("console");
 // ----- Config -----
 const port = 9000;
 
+const getGlobal = (ext) => {
+  let data = "";
+  let dir = path.join(process.cwd(), "global");
+  let files = fs.readdirSync(dir);
+  for (const file of files) {
+    const [fileName, fileExt] = file.split(/\.(?=[^\.]+$)/);
+    if (fileExt == ext) {
+      data += fs.readFileSync(path.join(dir, file), {
+        encoding: "utf8",
+        flag: "r",
+      });
+    }
+  }
+  let base64 = Buffer.from(data).toString("base64");
+  return base64;
+};
+
 const copyIndexHTML = () => {
   let source = path.join(__dirname, "template", "index.html");
   let target = path.join(process.cwd(), "dist", "index.html");
@@ -24,7 +41,7 @@ const makePagesObject = (arr) => {
     let html = Buffer.from(item.html).toString("base64");
     let js = Buffer.from(item.js).toString("base64");
     let css = Buffer.from(item.css).toString("base64");
-    str += `${item.name}:{html:"${html}",js:"${js}",css:"${css}"}`;
+    str += `${item.name}:{html:"${html}",js:"${js}",css:"${css}"},`;
   }
   str += "}; ";
   return str;
@@ -74,20 +91,25 @@ const newproject = (projectname) => {
   });
 };
 
-const buildproject = () => {
+let buildNumber = 0;
+const buildproject = (pagename) => {
   let pages_arr = getPageArrayFromDir(path.join(process.cwd(), "pages"));
 
   let script = makePagesObject(pages_arr);
+  let globalJS = getGlobal("js");
+  script += `const vj_global_js = "${globalJS}";`;
+  let globalCSS = getGlobal("css");
+  script += `const vj_global_css = "${globalCSS}";`;
   script += fs.readFileSync(path.join(__dirname, "lib.js"), {
     encoding: "utf8",
     flag: "r",
   });
+  script += `vj_loadpage("${pagename}");`;
 
   const distDir = path.join(process.cwd(), "dist");
   fs.writeFileSync(path.join(distDir, "index.js"), script);
   copyIndexHTML();
-
-  console.log("Build successful!");
+  buildNumber++;
 };
 
 const createPage = (pagename) => {
@@ -98,13 +120,17 @@ const createPage = (pagename) => {
   console.log(`${pagename} page created!`);
 };
 
-const runServer = () => {
-  buildproject();
+const runServer = (pagename) => {
   let html = path.join(process.cwd(), "dist", "index.html");
   let js = path.join(process.cwd(), "dist", "index.js");
   http
     .createServer(function (req, res) {
       switch (req.url) {
+        case "/buildnumber":
+          res.writeHead(200, { "Content-Type": "text/plain" });
+          res.write(buildNumber.toString());
+          res.end();
+          break;
         case "/":
           fs.readFile(html, function (err, data) {
             res.writeHead(200, { "Content-Type": "text/html" });
@@ -125,9 +151,9 @@ const runServer = () => {
 
   const watcher = chokidar.watch(process.cwd(), { persistent: true });
   watcher
-    .on("add", buildproject)
-    .on("change", buildproject)
-    .on("unlink", buildproject);
+    .on("add", () => buildproject(pagename))
+    .on("change", () => buildproject(pagename))
+    .on("unlink", () => buildproject(pagename));
 
   console.log(`Server is running at http://localhost:${port}`);
 };
@@ -137,9 +163,15 @@ program
   .description("Create new project")
   .action(newproject);
 
-program.command("build").description("Build project").action(buildproject);
+program
+  .command("build")
+  .description("Build project")
+  .action(() => {
+    buildproject("home");
+    console.log("Build successful!");
+  });
 
-program.command("run").description("Run Server").action(runServer);
+program.command("run <pagename>").description("Run Server").action(runServer);
 
 program
   .command("create-page <pagename>")
