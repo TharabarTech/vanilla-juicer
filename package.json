@@ -21,6 +21,8 @@
   },
   "homepage": "https://github.com/TharabarTech/vanilla-juicer#readme",
   "dependencies": {
-    "commander": "^8.2.0"
+    "chokidar": "^3.5.2",
+    "commander": "^8.2.0",
+    "ncp": "^2.0.0"
   }
 }
