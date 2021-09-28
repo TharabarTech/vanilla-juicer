@@ -87,16 +87,24 @@ myButton.addEventListener("click", () => {
 
 ## Build & Run
 
-Finally, use the **vj build** command to build the project. In the PAGE-NAME field, enter the name of the page you want to open at the beginning of the application.
+You can use the **vj run** command to preview the project you wrote. In PAGE-NAME, use the page name you want to appear at the beginning of the application.
 
 ```
-    vj build PAGE-NAME
+    vj run PAGE-NAME
 ```
 
-The created html and javascript files can be found in the **dist** folder.
+After running the **vj run** command, you can preview it at http://localhost:9000 in your browser. The browser will automatically refresh whenever you make any changes to the project.
+
+If you run the vj run command, you can get the output file in the dist folder whenever you want, as it automatically builds the project in the background.
 
 ```
 dist
 |__ index.html
 |__ index.js
+```
+
+If you want to build manually without running the vj run command, you can use the vj build command. In PAGE-NAME, use the page name you want to appear at the beginning of the application.
+
+```
+    vj build PAGE-NAME
 ```
