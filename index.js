@@ -7,11 +7,12 @@ const { exec } = require("child_process");
 const { ncp } = require("ncp");
 const fs = require("fs");
 const path = require("path");
-const { Console } = require("console");
+const Page = require("./page");
 
 // ----- Config -----
 const port = 9000;
 
+// Helper Functions
 const getGlobal = (ext) => {
   let data = "";
   let dir = path.join(process.cwd(), "global");
@@ -37,11 +38,9 @@ const copyIndexHTML = () => {
 
 const makePagesObject = (arr) => {
   let str = "const pages = {";
-  for (const item of arr) {
-    let html = Buffer.from(item.html).toString("base64");
-    let js = Buffer.from(item.js).toString("base64");
-    let css = Buffer.from(item.css).toString("base64");
-    str += `${item.name}:{html:"${html}",js:"${js}",css:"${css}"},`;
+  for (const page of arr) {
+    let [html, css, js] = page.getBase64();
+    str += `${page.pageName}:{html:"${html}",js:"${js}",css:"${css}"},`;
   }
   str += "}; ";
   return str;
@@ -51,7 +50,7 @@ const getPageArrayFromDir = (pages_dir) => {
   let arr = [];
   let pages = fs.readdirSync(pages_dir);
   for (const page of pages) {
-    let filename_arr = page.split(".");
+    let filename_arr = page.split(/\.(?=[^\.]+$)/);
     if (filename_arr[1] == "html") {
       let html = fs.readFileSync(path.join(pages_dir, page), {
         encoding: "utf8",
@@ -69,12 +68,7 @@ const getPageArrayFromDir = (pages_dir) => {
         }
       );
 
-      arr.push({
-        name: filename_arr[0],
-        html,
-        js,
-        css,
-      });
+      arr.push(new Page(filename_arr[0], html, css, js));
     }
   }
   return arr;
