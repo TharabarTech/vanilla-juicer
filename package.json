@@ -23,6 +23,10 @@
   "dependencies": {
     "chokidar": "^3.5.2",
     "commander": "^8.2.0",
-    "ncp": "^2.0.0"
+    "fs-extra": "^10.0.0",
+    "inquirer": "^8.1.5",
+    "ncp": "^2.0.0",
+    "node-static": "^0.7.11",
+    "open": "^8.2.1"
   }
 }

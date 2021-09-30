@@ -3,14 +3,21 @@
 const http = require("http");
 const chokidar = require("chokidar");
 const { program } = require("commander");
-const { exec } = require("child_process");
 const { ncp } = require("ncp");
-const fs = require("fs");
 const path = require("path");
+const inquirer = require("inquirer");
+const fs = require("fs");
+const nodeStatic = require("node-static");
+const open = require("open");
+
+// My Classes
 const Page = require("./page");
 
 // ----- Config -----
 const port = 9000;
+
+// ----- Init Path -----
+const cwd = process.cwd();
 
 // Helper Functions
 const getGlobal = (ext) => {
@@ -28,12 +35,6 @@ const getGlobal = (ext) => {
   }
   let base64 = Buffer.from(data).toString("base64");
   return base64;
-};
-
-const copyIndexHTML = () => {
-  let source = path.join(__dirname, "template", "index.html");
-  let target = path.join(process.cwd(), "dist", "index.html");
-  fs.copyFileSync(source, target);
 };
 
 const makePagesObject = (arr) => {
@@ -76,20 +77,30 @@ const getPageArrayFromDir = (pages_dir) => {
 
 // ----- Command Functions -----
 const newproject = (projectname) => {
-  fs.mkdirSync(projectname);
-  let dir = path.join(process.cwd(), projectname);
-  let templateDir = path.join(__dirname, "template");
-  ncp(templateDir, dir);
-  exec(`npm init -y`, { cwd: dir }, (err, stdout, stderr) => {
-    console.log(`${projectname} successfully created!`);
-  });
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "template",
+        message: "Choose template",
+        choices: ["blank", "sidebar"],
+      },
+    ])
+    .then((answers) => {
+      fs.mkdirSync(path.join(cwd, projectname));
+      let dir = path.join(cwd, projectname);
+      let templateDir = path.join(__dirname, "templates", answers.template);
+      ncp(templateDir, dir);
+      console.log(`${projectname} successfully created!`);
+    });
 };
 
 let buildNumber = 0;
 const buildproject = (pagename) => {
   let pages_arr = getPageArrayFromDir(path.join(process.cwd(), "pages"));
 
-  let script = makePagesObject(pages_arr);
+  let script = "<script>";
+  script += makePagesObject(pages_arr);
   let globalJS = getGlobal("js");
   script += `const vj_global_js = "${globalJS}";`;
   let globalCSS = getGlobal("css");
@@ -99,10 +110,26 @@ const buildproject = (pagename) => {
     flag: "r",
   });
   script += `vj_loadpage("${pagename}");`;
+  script += "</script>";
 
-  const distDir = path.join(process.cwd(), "dist");
-  fs.writeFileSync(path.join(distDir, "index.js"), script);
-  copyIndexHTML();
+  //Make dir if not exist
+  if (!fs.existsSync(path.join(cwd, "dist"))) {
+    fs.mkdirSync(path.join(cwd, "dist"));
+  }
+
+  // Copy and Generate File in dist folder
+  // fs.writeFileSync(path.join(cwd, "dist", "index.js"), script);
+  // fs.copyFileSync(
+  //   path.join(cwd, "index.html"),
+  //   path.join(cwd, "dist", "index.html")
+  // );
+  let rawIndex = fs.readFileSync(path.join(cwd, "index.html"));
+  let pos = rawIndex.toString().match(/<\/body>/).index;
+  let index = [rawIndex.slice(0, pos), script, rawIndex.slice(pos)].join("");
+  fs.writeFileSync(path.join(cwd, "dist", "index.html"), index);
+  if (fs.readdirSync(path.join(cwd, "res")).length > 0) {
+    ncp(path.join(cwd, "res"), path.join(cwd, "dist", "res"));
+  }
   buildNumber++;
 };
 
@@ -115,8 +142,11 @@ const createPage = (pagename) => {
 };
 
 const runServer = (pagename) => {
-  let html = path.join(process.cwd(), "dist", "index.html");
-  let js = path.join(process.cwd(), "dist", "index.js");
+  let html = path.join(cwd, "dist", "index.html");
+  let js = path.join(cwd, "dist", "index.js");
+
+  let fileServer = new nodeStatic.Server(path.join(cwd, "dist"));
+
   http
     .createServer(function (req, res) {
       switch (req.url) {
@@ -139,17 +169,26 @@ const runServer = (pagename) => {
             return res.end();
           });
           break;
+        default:
+          if (req.url.substring(0, 4) == "/res") {
+            fileServer.serve(req, res);
+          }
+          break;
       }
     })
     .listen(port);
 
-  const watcher = chokidar.watch(process.cwd(), { persistent: true });
+  const watcher = chokidar.watch(process.cwd(), {
+    persistent: true,
+  });
   watcher
     .on("add", () => buildproject(pagename))
-    .on("change", () => buildproject(pagename))
-    .on("unlink", () => buildproject(pagename));
+    .on("change", () => buildproject(pagename));
+
+  watcher.unwatch("dist");
 
   console.log(`Server is running at http://localhost:${port}`);
+  open(`http://localhost:${port}`);
 };
 
 program

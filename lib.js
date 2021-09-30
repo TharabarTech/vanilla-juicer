@@ -45,16 +45,39 @@ if (window.location.host == "localhost:9000") {
   xhttp.send();
 }
 
-function vj_loadpage(page) {
-  // CSS
-  let css = window.atob(pages[page].css);
-  vj_page_style.innerHTML = css;
-  // HTML
-  vj_root.innerHTML = window.atob(pages[page].html);
-  // JS
-  document.body.removeChild(document.body.lastChild);
-  let js = window.atob(pages[page].js);
-  let script = document.createElement("script");
-  script.innerHTML = js;
-  document.body.appendChild(script);
+function vj_loadpage(page, data) {
+  let deltatime = 0;
+  let speed = 50;
+  let duration = 500;
+  let half = duration / 2;
+  let isChanged = false;
+  let timer = setInterval(() => {
+    deltatime += speed;
+    if (deltatime > duration) {
+      clearInterval(timer);
+      if (typeof vj_onload == "function") {
+        vj_onload(data);
+      }
+    } else if (deltatime < half) {
+      let opacity = (half - deltatime) / half;
+      vj_root.style.opacity = opacity;
+    } else if (deltatime > half) {
+      if (!isChanged) {
+        isChanged = true;
+        // CSS
+        let css = window.atob(pages[page].css);
+        vj_page_style.innerHTML = css;
+        // HTML
+        vj_root.innerHTML = window.atob(pages[page].html);
+        // JS
+        document.body.removeChild(document.body.lastChild);
+        let js = window.atob(pages[page].js);
+        let script = document.createElement("script");
+        script.innerHTML = js;
+        document.body.appendChild(script);
+      }
+      opacity = (deltatime - half) / half;
+      vj_root.style.opacity = opacity;
+    }
+  }, speed);
 }
