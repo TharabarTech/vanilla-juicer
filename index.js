@@ -83,7 +83,7 @@ const newproject = (projectname) => {
         type: "list",
         name: "template",
         message: "Choose template",
-        choices: ["blank", "sidebar"],
+        choices: ["Blank", "Sidebar", "Admin Panel"],
       },
     ])
     .then((answers) => {
@@ -112,17 +112,14 @@ const buildproject = (pagename) => {
   script += `vj_loadpage("${pagename}");`;
   script += "</script>";
 
+  // Remove Newline, Tabs and Whitespace
+  script = script.replace(/\s+/g, " ");
+
   //Make dir if not exist
   if (!fs.existsSync(path.join(cwd, "dist"))) {
     fs.mkdirSync(path.join(cwd, "dist"));
   }
 
-  // Copy and Generate File in dist folder
-  // fs.writeFileSync(path.join(cwd, "dist", "index.js"), script);
-  // fs.copyFileSync(
-  //   path.join(cwd, "index.html"),
-  //   path.join(cwd, "dist", "index.html")
-  // );
   let rawIndex = fs.readFileSync(path.join(cwd, "index.html"));
   let pos = rawIndex.toString().match(/<\/body>/).index;
   let index = [rawIndex.slice(0, pos), script, rawIndex.slice(pos)].join("");

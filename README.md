@@ -100,11 +100,26 @@ If you run the vj run command, you can get the output file in the dist folder wh
 ```
 dist
 |__ index.html
-|__ index.js
 ```
 
 If you want to build manually without running the vj run command, you can use the vj build command. In PAGE-NAME, use the page name you want to appear at the beginning of the application.
 
 ```
     vj build PAGE-NAME
+```
+
+## Binding
+
+You can easily create <span> tags using {{ }} in html files in the pages folder.
+
+Example, if you write **{{myName}}** in html
+
+```html
+<h1>{{myName}}</h1>
+```
+
+You can modify that **myName** field as a variable in its corresponding javascript file.
+
+```javascript
+myName.contentText = "Swan Thu";
 ```
