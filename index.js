@@ -20,7 +20,7 @@ const port = 9000;
 const cwd = process.cwd();
 
 // Helper Functions
-const getGlobal = (ext) => {
+async function getGlobal(ext) {
   let data = "";
   let dir = path.join(process.cwd(), "global");
   let files = fs.readdirSync(dir);
@@ -35,19 +35,19 @@ const getGlobal = (ext) => {
   }
   let base64 = Buffer.from(data).toString("base64");
   return base64;
-};
+}
 
 const makePagesObject = (arr) => {
   let str = "const pages = {";
   for (const page of arr) {
-    let [html, css, js] = page.getBase64();
-    str += `${page.pageName}:{html:"${html}",js:"${js}",css:"${css}"},`;
+    let [html, css, js, bind] = page.getBase64();
+    str += `${page.pageName}:{html:"${html}", js:"${js}", bind:"${bind}", css:"${css}"},`;
   }
   str += "}; ";
   return str;
 };
 
-const getPageArrayFromDir = (pages_dir) => {
+async function getPageArrayFromDir(pages_dir) {
   let arr = [];
   let pages = fs.readdirSync(pages_dir);
   for (const page of pages) {
@@ -73,7 +73,7 @@ const getPageArrayFromDir = (pages_dir) => {
     }
   }
   return arr;
-};
+}
 
 // ----- Command Functions -----
 const newproject = (projectname) => {
@@ -96,14 +96,14 @@ const newproject = (projectname) => {
 };
 
 let buildNumber = 0;
-const buildproject = (pagename) => {
-  let pages_arr = getPageArrayFromDir(path.join(process.cwd(), "pages"));
+async function buildproject(pagename) {
+  let pages_arr = await getPageArrayFromDir(path.join(cwd, "pages"));
 
   let script = "<script>";
   script += makePagesObject(pages_arr);
-  let globalJS = getGlobal("js");
+  let globalJS = await getGlobal("js");
   script += `const vj_global_js = "${globalJS}";`;
-  let globalCSS = getGlobal("css");
+  let globalCSS = await getGlobal("css");
   script += `const vj_global_css = "${globalCSS}";`;
   script += fs.readFileSync(path.join(__dirname, "lib.js"), {
     encoding: "utf8",
@@ -128,7 +128,7 @@ const buildproject = (pagename) => {
     ncp(path.join(cwd, "res"), path.join(cwd, "dist", "res"));
   }
   buildNumber++;
-};
+}
 
 const createPage = (pagename) => {
   let pages_dir = path.join(process.cwd(), "pages");

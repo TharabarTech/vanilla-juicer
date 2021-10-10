@@ -1,6 +1,6 @@
 {
   "name": "vanilla-juicer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "light weight single page application framework",
   "main": "index.js",
   "scripts": {

@@ -1,5 +1,6 @@
 const vj_root = document.querySelector("#vj-root");
 appendGlobal();
+appendPageObject();
 const vj_page_style = document.createElement("style");
 document.head.appendChild(vj_page_style);
 
@@ -11,6 +12,16 @@ function appendGlobal() {
 
   let script = document.createElement("script");
   let js = window.atob(vj_global_js);
+  script.innerHTML = js;
+  document.body.appendChild(script);
+}
+
+function appendPageObject() {
+  let script = document.createElement("script");
+  let js = "";
+  for (const page in pages) {
+    js += window.atob(pages[page].js);
+  }
   script.innerHTML = js;
   document.body.appendChild(script);
 }
@@ -42,6 +53,7 @@ if (window.location.host == "localhost:9000") {
 }
 
 function vj_loadpage(page, data) {
+  delete window.PageObj;
   let deltatime = 0;
   let speed = 50;
   let duration = 500;
@@ -51,22 +63,23 @@ function vj_loadpage(page, data) {
     deltatime += speed;
     if (deltatime > duration) {
       clearInterval(timer);
-      if (typeof vj_onload == "function") {
-        vj_onload(data);
-      }
     } else if (deltatime < half) {
       let opacity = (half - deltatime) / half;
       vj_root.style.opacity = opacity;
     } else if (deltatime > half) {
       if (!isChanged) {
         isChanged = true;
-        let css = window.atob(pages[page].css);
+        let css = "";
+        let bind = "";
+        try {
+          css = window.atob(pages[page].css);
+          bind = window.atob(pages[page].bind);
+        } catch (e) {}
         vj_page_style.innerHTML = css;
         vj_root.innerHTML = window.atob(pages[page].html);
         document.body.removeChild(document.body.lastChild);
-        let js = window.atob(pages[page].js);
         let script = document.createElement("script");
-        script.innerHTML = js;
+        script.innerHTML = bind;
         document.body.appendChild(script);
       }
       opacity = (deltatime - half) / half;
