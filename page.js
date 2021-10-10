@@ -25,9 +25,11 @@ module.exports = class Page {
     );
 
     // Add all variable declaration
+    this.bind = "[";
     for (const varName of this.varArr) {
-      this.bind += `const ${varName} = document.getElementById("${varName}");`;
+      this.bind += `"${varName}",`;
     }
+    this.bind += "]";
     // Then add the user written JS
     this.js += this.rawJS;
 
@@ -40,7 +42,7 @@ module.exports = class Page {
       Buffer.from(this.html).toString("base64"),
       Buffer.from(this.css).toString("base64"),
       Buffer.from(this.js).toString("base64"),
-      Buffer.from(this.bind).toString("base64"),
+      this.bind,
     ];
   }
 };

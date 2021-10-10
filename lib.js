@@ -4,6 +4,10 @@ appendPageObject();
 const vj_page_style = document.createElement("style");
 document.head.appendChild(vj_page_style);
 
+function getClassName(page) {
+  return page.charAt(0).toUpperCase() + page.slice(1) + "Page";
+}
+
 function appendGlobal() {
   let style = document.createElement("style");
   let css = window.atob(vj_global_css);
@@ -19,9 +23,14 @@ function appendGlobal() {
 function appendPageObject() {
   let script = document.createElement("script");
   let js = "";
+  let cl = "const classes = {";
   for (const page in pages) {
     js += window.atob(pages[page].js);
+    let className = getClassName(page);
+    cl += `${page} : ${className},`;
   }
+  cl += "}";
+  js += cl;
   script.innerHTML = js;
   document.body.appendChild(script);
 }
@@ -52,8 +61,10 @@ if (window.location.host == "localhost:9000") {
   xhttp.send();
 }
 
+let pageObj = undefined;
+
 function vj_loadpage(page, data) {
-  delete window.PageObj;
+  pageObj = undefined;
   let deltatime = 0;
   let speed = 50;
   let duration = 500;
@@ -63,6 +74,10 @@ function vj_loadpage(page, data) {
     deltatime += speed;
     if (deltatime > duration) {
       clearInterval(timer);
+      pageObj = new classes[page](data);
+      for (const bind of pages[page].bind) {
+        pageObj[bind] = document.getElementById(bind);
+      }
     } else if (deltatime < half) {
       let opacity = (half - deltatime) / half;
       vj_root.style.opacity = opacity;
@@ -70,17 +85,12 @@ function vj_loadpage(page, data) {
       if (!isChanged) {
         isChanged = true;
         let css = "";
-        let bind = "";
         try {
           css = window.atob(pages[page].css);
-          bind = window.atob(pages[page].bind);
         } catch (e) {}
         vj_page_style.innerHTML = css;
         vj_root.innerHTML = window.atob(pages[page].html);
         document.body.removeChild(document.body.lastChild);
-        let script = document.createElement("script");
-        script.innerHTML = bind;
-        document.body.appendChild(script);
       }
       opacity = (deltatime - half) / half;
       vj_root.style.opacity = opacity;

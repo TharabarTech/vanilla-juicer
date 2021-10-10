@@ -41,7 +41,7 @@ const makePagesObject = (arr) => {
   let str = "const pages = {";
   for (const page of arr) {
     let [html, css, js, bind] = page.getBase64();
-    str += `${page.pageName}:{html:"${html}", js:"${js}", bind:"${bind}", css:"${css}"},`;
+    str += `${page.pageName}:{html:"${html}", js:"${js}", bind:${bind}, css:"${css}"},`;
   }
   str += "}; ";
   return str;
