@@ -7,12 +7,28 @@ module.exports = class Page {
 
   constructor(pageName, html, css, js) {
     this.pageName = pageName;
-    this.rawHTML = html;
+    this.rawHTML = html.replace(/\s+/g, " ");
     this.rawCSS = css;
     this.rawJS = js;
 
     // Binding
+    this.bindEvent();
     this.bindVar();
+  }
+
+  bindEvent() {
+    let matches = this.rawHTML.match(/<[^/].*?>/g);
+    if (matches !== null) {
+      for (const match of matches) {
+        let i = match.match(/.*id="([\w-]+)".*/);
+        let m = match.match(/<.*\((\w+)\)="(\w+)".*>/);
+        if (m !== null && i !== null) {
+          console.log(
+            `Id : ${i[1]} , Event Name : ${m[1]} , Handler : ${m[2]}`
+          );
+        }
+      }
+    }
   }
 
   bindVar() {

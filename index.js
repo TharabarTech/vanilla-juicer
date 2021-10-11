@@ -177,6 +177,8 @@ const runServer = (pagename) => {
 
   const watcher = chokidar.watch(process.cwd(), {
     persistent: true,
+    interval: 1000,
+    awaitWriteFinish: true,
   });
   watcher
     .on("add", () => buildproject(pagename))
