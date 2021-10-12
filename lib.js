@@ -76,7 +76,19 @@ function vj_loadpage(page, data) {
       clearInterval(timer);
       pageObj = new classes[page](data);
       for (const bind of pages[page].bind) {
-        pageObj[bind] = document.getElementById(bind);
+        switch (bind.type) {
+          case "span":
+            pageObj[bind] = document.getElementById(bind.id);
+            break;
+          case "sharp":
+            pageObj[bind] = document.getElementById(bind.id);
+            break;
+          case "event":
+            document
+              .getElementById(bind.id)
+              .addEventListener(bind.event, pageObj[bind.handler]);
+            break;
+        }
       }
     } else if (deltatime < half) {
       let opacity = (half - deltatime) / half;

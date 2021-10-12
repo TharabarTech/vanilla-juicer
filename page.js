@@ -3,7 +3,7 @@ module.exports = class Page {
   css = "";
   js = "";
   bind = "";
-  varArr = [];
+  bindArr = [];
 
   constructor(pageName, html, css, js) {
     this.pageName = pageName;
@@ -11,46 +11,64 @@ module.exports = class Page {
     this.rawCSS = css;
     this.rawJS = js;
 
+    // To leave the original code in Raw Variables
+    this.html = this.rawHTML;
+    this.css = this.rawCSS;
+    this.js = this.rawJS;
+
     // Binding
+    this.bindSpan();
+    this.bindSharp();
     this.bindEvent();
     this.bindVar();
   }
 
   bindEvent() {
-    let matches = this.rawHTML.match(/<[^/].*?>/g);
+    let matches = this.html.match(/<[^/].*?>/g);
     if (matches !== null) {
       for (const match of matches) {
         let i = match.match(/.*id="([\w-]+)".*/);
         let m = match.match(/<.*\((\w+)\)="(\w+)".*>/);
         if (m !== null && i !== null) {
-          console.log(
-            `Id : ${i[1]} , Event Name : ${m[1]} , Handler : ${m[2]}`
-          );
+          this.bindArr.push({
+            type: "event",
+            id: i[1],
+            event: m[1],
+            handler: m[2],
+          });
         }
       }
     }
   }
 
-  bindVar() {
-    this.html = this.rawHTML.replace(
-      /\{\{([a-zA-Z0-9-_]+)\}\}/g,
-      (match, varName) => {
-        this.varArr.push(varName);
-        return `<span id="${varName}"></span>`;
-      }
-    );
+  bindSharp() {
+    this.html = this.html.replace(/<(.*)#(\w+)\s?\/?>/g, (match, str, id) => {
+      this.bindArr.push({ type: "sharp", id: id });
+      return `<${str} id="${id}">`;
+    });
+  }
 
+  bindSpan() {
+    this.html = this.html.replace(/\{\{([a-zA-Z0-9-_]+)\}\}/g, (match, id) => {
+      this.bindArr.push({ type: "span", id: id });
+      return `<span id="${id}"></span>`;
+    });
+  }
+
+  bindVar() {
     // Add all variable declaration
     this.bind = "[";
-    for (const varName of this.varArr) {
-      this.bind += `"${varName}",`;
+    for (const b of this.bindArr) {
+      switch (b.type) {
+        case "span":
+          this.bind += `{type:"${b.type}", id: "${b.id}" },`;
+          break;
+        case "event":
+          this.bind += `{ type: "event", id: "${b.id}", event: "${b.event}", handler: "${b.handler}" },`;
+          break;
+      }
     }
     this.bind += "]";
-    // Then add the user written JS
-    this.js += this.rawJS;
-
-    // Nothing to do with CSS for now!
-    this.css = this.rawCSS;
   }
 
   getBase64() {
