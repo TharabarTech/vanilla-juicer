@@ -42,9 +42,9 @@ module.exports = class Page {
   }
 
   bindSharp() {
-    this.html = this.html.replace(/<(.*)#(\w+)\s?\/?>/g, (match, str, id) => {
+    this.html = this.html.replace(/ ##(\w+) ?\/?>/g, (match, id) => {
       this.bindArr.push({ type: "sharp", id: id });
-      return `<${str} id="${id}">`;
+      return ` id="${id}">`;
     });
   }
 
