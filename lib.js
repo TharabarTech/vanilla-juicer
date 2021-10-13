@@ -61,10 +61,10 @@ if (window.location.host == "localhost:9000") {
   xhttp.send();
 }
 
-let pageObj = undefined;
+let vj_page = undefined;
 
 function vj_loadpage(page, data) {
-  pageObj = undefined;
+  vj_page = undefined;
   let deltatime = 0;
   let speed = 50;
   let duration = 500;
@@ -74,19 +74,21 @@ function vj_loadpage(page, data) {
     deltatime += speed;
     if (deltatime > duration) {
       clearInterval(timer);
-      pageObj = new classes[page](data);
+      vj_page = new classes[page](data);
       for (const bind of pages[page].bind) {
         switch (bind.type) {
           case "span":
-            pageObj[bind] = document.getElementById(bind.id);
+            vj_page[bind] = document.getElementById(bind.id);
             break;
           case "sharp":
-            pageObj[bind] = document.getElementById(bind.id);
+            vj_page[bind] = document.getElementById(bind.id);
             break;
           case "event":
             document
               .getElementById(bind.id)
-              .addEventListener(bind.event, pageObj[bind.handler]);
+              .addEventListener(bind.event, (e) => {
+                vj_page[bind.handler](e);
+              });
             break;
         }
       }
